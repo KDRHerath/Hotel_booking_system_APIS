@@ -3,6 +3,10 @@ import { Request, Response } from "express";
 import prisma from "../lib/db";
 import { hashPassword } from "../lib/argon2Hash";
 import { sendEmail } from "../lib/mailer";
+import argon2 from "argon2";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const userRegistaration = async (req: Request, res: Response) => {
   const { email, password, userName } = req.body;
@@ -123,6 +127,42 @@ export const verifyUser = async (req: Request, res: Response) => {
       200,
       updatedUser,
       "User verified successfully"
+    );
+  } catch (error) {
+    console.error("Error verifying user:", error);
+    return ERROR_RESPONSE(res, false, 500, "Internal Server Error");
+  }
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: email },
+    });
+    if (!user) {
+      return ERROR_RESPONSE(res, false, 404, "Invalide Email");
+    }
+    if (!user.isVerified) {
+      return ERROR_RESPONSE(res, false, 409, "User not verified");
+    }
+    const isPasswordValid = await argon2.verify(user.password, password);
+
+    if (!isPasswordValid) {
+      return ERROR_RESPONSE(res, false, 400, "Invalid password");
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: "7h",
+    });
+
+    return SUCCESS_RESPONSE(
+      res,
+      true,
+      200,
+      { user, token },
+      "User logged in successfully"
     );
   } catch (error) {
     console.error("Error verifying user:", error);

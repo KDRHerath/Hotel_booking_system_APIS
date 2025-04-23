@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  loginUser,
   reSendVerificationCode,
   userRegistaration,
   verifyUser,
@@ -14,5 +15,6 @@ router.get("/", (req, res) => {
 router.post("/register", userRegistaration);
 router.put("/resend", reSendVerificationCode);
 router.put("/verify", verifyUser);
+router.post("/login", loginUser);
 
 export default router;

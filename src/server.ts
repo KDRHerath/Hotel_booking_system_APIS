@@ -1,9 +1,10 @@
 import express from "express";
 import cors from "cors";
 import authRoute from "./route/authRoute";
+import profileRoute from "./route/profileRoute";
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3001;
 
 const allowedOrigins = ["http://localhost:3000"];
 
@@ -31,6 +32,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoute);
+app.use("/api/profile", profileRoute);
 
 // Start the server
 app.listen(PORT, () => {
